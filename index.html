@@ -202,7 +202,7 @@ document.body.appendChild(element);
 // ✅ Generate PDF for the receipt
 html2pdf().from(element).set({
 margin: 10,
-filename: `Order_Receipt_${orderId}.pdf`,
+filename: `Order_Receipt_${order.fullName}.pdf`,
 image: { type: 'jpeg', quality: 0.98 },
 html2canvas: { scale: 2, useCORS: true },
 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
