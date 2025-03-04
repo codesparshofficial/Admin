@@ -13,7 +13,7 @@
         <h1 class="text-2xl font-bold">Admin Panel - Orders</h1>
         <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
     </div>
-
+<input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, or Status" class="w-full p-2 mb-4 border rounded">
     <!-- Orders Container -->
     <div id="ordersContainer" class="grid grid-cols-1 gap-6"></div>
 
@@ -69,12 +69,16 @@ const firebaseConfig = {
 
                 ordersHTML += `
                     <div class="border p-6 rounded-lg shadow-md bg-white">
-                        <h2 class="text-lg font-semibold">${order.name} - ₹${order.price}</h2>
+                        <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
                         <p><strong>Customer:</strong> ${order.fullName}</p>
                         <p><strong>Mobile:</strong> ${order.mobile}</p>
                         <p><strong>Email:</strong> ${order.email}</p>
                         <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+                         <p><strong>Order Id:</strong> ${orderId}</p>
                         <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+                         <p><strong>Payment Status:</strong> ${order.paymentId}</p>
+                         
+                          <p><strong>Time:</strong> ${order.createdAt}</p>
                         <p><strong>Order Type:</strong> ${order.type}</p>
                         <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
                         
@@ -127,7 +131,7 @@ URL.revokeObjectURL(objectURL);
 
         // ✅ Update Order Status
         window.updateStatus = async function(orderId, currentStatus) {
-            const statusList = ["Processing", "Shipped", "Delivered"];
+            const statusList = ["Processed"];
             let newIndex = (statusList.indexOf(currentStatus) + 1) % statusList.length;
             let newStatus = statusList[newIndex];
 
@@ -138,34 +142,72 @@ URL.revokeObjectURL(objectURL);
             alert("Order status updated to " + newStatus);
         };
 
-        // ✅ Generate Order Receipt using HTML2PDF.js
-        window.generateReceipt = function(orderId, order) {
+window.generateReceipt = function(orderId, order) {
 const element = document.createElement("div");
 element.style.padding = "20px";
-element.style.border = "1px solid black";
+element.style.border = "2px solid #333";
+element.style.borderRadius = "10px";
+element.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
 element.style.fontFamily = "Arial, sans-serif";
 element.style.width = "100%";
-element.style.maxWidth = "500px";
-element.style.margin = "auto";
+element.style.maxWidth = "450px";
+element.style.margin = "20px auto";
+element.style.backgroundColor = "#fff";
+element.style.textAlign = "center";
+
 element.innerHTML = `
-<h2 style="text-align:center; margin-bottom: 20px;">Order Receipt</h2>
-<p><strong>Order ID:</strong> ${orderId}</p>
-<p><strong>Customer Name:</strong> ${order.fullName}</p>
-<p><strong>Mobile:</strong> ${order.mobile}</p>
-<p><strong>Price:</strong> ₹${order.price}</p>
-<p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+<!-- ✅ Company Name & Logo -->
+<div style="text-align:center; margin-bottom: 10px;">
+  <img src="https://yourcompany.com/logo.png" alt="Company Logo" style="max-width: 100px;">
+  <h2 style="color: #007bff; margin-top: 5px;">Your Company Name</h2>
+  <p style="font-size: 12px; color: #555;">www.yourcompany.com | support@yourcompany.com</p>
+</div>
+
+<hr style="border: 1px solid #ddd; margin: 10px 0;">
+
+<!-- ✅ Order Details -->
+<p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
+<p style="font-size: 14px; color: #333;"><strong>Product:</strong> ${order.name}</p>
+<p style="font-size: 14px; color: #333;"><strong>Type:</strong> ${order.type}</p>
+<p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ₹${order.price}</p>
+<p style="font-size: 12px; color: #555;"><strong>Order Date:</strong> ${order.createdAt}</p>
+
+<hr style="border: 1px solid #ddd; margin: 10px 0;">
+
+<!-- ✅ Buyer Details -->
+<h3 style="color: #333; margin-bottom: 5px;">Buyer Details</h3>
+<p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
+<p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
+<p style="font-size: 14px; color: #333;"><strong>Email:</strong> ${order.email}</p>
+<p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+
+<hr style="border: 1px solid #ddd; margin: 10px 0;">
+
+<!-- ✅ Payment Details -->
+<p style="font-size: 14px; color: ${order.paymentStatus === 'Paid' ? 'green' : 'red'};">
+  <strong>Payment Status:</strong> ${order.paymentStatus}
+</p>
+<p style="font-size: 14px; color: #333;"><strong>Payment ID:</strong> ${order.paymentId}</p>
+
+<hr style="border: 1px solid #ddd; margin: 10px 0;">
+
+<!-- ✅ Thank You Note -->
+<div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+  <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order! We appreciate your business.</p>
+</div>
 `;
 
-document.body.appendChild(element); // ✅ Ensure it's in the DOM
+document.body.appendChild(element);
 
+// ✅ Generate PDF for the receipt
 html2pdf().from(element).set({
 margin: 10,
-filename: `receipt_${orderId}.pdf`,
+filename: `Order_Receipt_${orderId}.pdf`,
 image: { type: 'jpeg', quality: 0.98 },
 html2canvas: { scale: 2, useCORS: true },
 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
 }).save().then(() => {
-document.body.removeChild(element); // ✅ Clean up after download
+document.body.removeChild(element);
 });
 };
         // ✅ Logout
@@ -183,7 +225,36 @@ document.body.removeChild(element); // ✅ Clean up after download
         window.closeModal = function() {
             document.getElementById("modal").classList.add("hidden");
         };
+// ✅ Search & Highlight Matching Text
+window.filterOrders = function () {
+const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+const orders = document.querySelectorAll("#ordersContainer > div");
 
+orders.forEach(order => {
+let found = false; // Flag to check if search term matches any field
+
+// Get all paragraph elements inside the order div
+const fields = order.querySelectorAll("p");
+
+fields.forEach(field => {
+let text = field.textContent;
+let lowerText = text.toLowerCase();
+
+// Remove previous highlights
+field.innerHTML = text;
+
+if (lowerText.includes(searchTerm) && searchTerm !== "") {
+found = true;
+// Highlight matching part
+let regex = new RegExp(`(${searchTerm})`, "gi");
+field.innerHTML = text.replace(regex, `<span class="bg-yellow-300 px-1">$1</span>`);
+}
+});
+
+// Show or hide based on search term
+order.style.display = found || searchTerm === "" ? "block" : "none";
+});
+};
     </script>
 </body>
 </html>
