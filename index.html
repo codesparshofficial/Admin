@@ -13,7 +13,8 @@
         <h1 class="text-2xl font-bold">Admin Panel - Orders</h1>
         <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
     </div>
-<input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, or Status" class="w-full p-2 mb-4 border rounded">
+<input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, Status etc.." class="w-full p-2 mb-4 border rounded">
+<audio id="orderAlert" src="https://www.soundjay.com/button/beep-07.wav"></audio>
     <!-- Orders Container -->
     <div id="ordersContainer" class="grid grid-cols-1 gap-6"></div>
 
@@ -84,51 +85,57 @@ function hideLoader() {
     }
 }
 
-// ✅ Fetch Orders from Firestore with Loader
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+let lastOrderCount = 0; // ✅ Global variable to track order count
+
 async function fetchOrders() {
-    showLoader(); // ✅ Loader start hoga
-    const querySnapshot = await getDocs(collection(db, "orders"));
-    let ordersHTML = "";
+showLoader(); // ✅ Loader start hoga
 
-    querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        const orderId = doc.id;
+onSnapshot(collection(db, "orders"), (querySnapshot) => {
+let ordersHTML = "";
+let currentOrderCount = querySnapshot.size;
 
-        ordersHTML += `
-            <div class="border p-6 rounded-lg shadow-md bg-white">
-                <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
-                <p><strong>Customer:</strong> ${order.fullName}</p>
-                <p><strong>Mobile:</strong> ${order.mobile}</p>
-                <p><strong>Email:</strong> ${order.email}</p>
-                <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-                <p><strong>Order Id:</strong> ${orderId}</p>
-                <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
-                <p><strong>Payment ID:</strong> ${order.paymentId}</p>
-                <p><strong>Time:</strong> ${order.createdAt}</p>
-                <p><strong>Order Type:</strong> ${order.type}</p>
-                <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
+// ✅ Check for new order alert
+if (currentOrderCount > lastOrderCount && lastOrderCount !== 0) {
+document.getElementById("orderAlert").play();
+}
+lastOrderCount = currentOrderCount; // ✅ Update order count
 
-                <div class="flex gap-4 mt-3">
-                    <div class="relative">
-                        <img src="${order.image1}" onclick="openModal('${order.image1}')" class="w-40 h-40 object-cover border cursor-pointer">
-                        <button onclick="downloadImage('${order.image1}')" class="absolute bottom-2 left-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">Download</button>
-                    </div>
-                    <div class="relative">
-                        <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
-                        <button onclick="downloadImage('${order.image2}')" class="absolute bottom-2 left-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">Download</button>
-                    </div>
-                </div>
+querySnapshot.forEach((doc) => {
+const order = doc.data();
+const orderId = doc.id;
 
-                <div class="mt-3">
-                    <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
-                    <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/"/g, '&quot;')})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-                </div>
-            </div>
-        `;
-    });
+ordersHTML += `
+<div class="border p-6 rounded-lg shadow-md bg-white">
+  <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
+  <p><strong>Customer:</strong> ${order.fullName}</p>
+  <p><strong>Mobile:</strong> ${order.mobile}</p>
+  <p><strong>Email:</strong> ${order.email}</p>
+  <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+  <p><strong>Order Id:</strong> ${orderId}</p>
+  <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+  <p><strong>Payment ID:</strong> ${order.paymentId}</p>
+  <p><strong>Time:</strong> ${order.createdAt}</p>
+  <p><strong>Order Type:</strong> ${order.type}</p>
+  <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
+  
+  <div class="flex gap-4 mt-3">
+    <img src="${order.image1}" class="w-40 h-40 object-cover border cursor-pointer">
+    <img src="${order.image2}" class="w-40 h-40 object-cover border cursor-pointer">
+  </div>
+  
+  <div class="mt-3">
+    <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
+    <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/" /g, '&quot;' )})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+  </div>
+</div>
+`;
+});
 
-    document.getElementById("ordersContainer").innerHTML = ordersHTML;
-    hideLoader(); // ✅ Loader hata do jab orders load ho jaye
+document.getElementById("ordersContainer").innerHTML = ordersHTML;
+hideLoader(); // ✅ Loader hatado jab orders load ho jaye
+});
 }
 
 window.downloadImage = function(imageUrl) {
@@ -302,4 +309,4 @@ order.style.display = found || searchTerm === "" ? "block" : "none";
 };
     </script>
 </body>
-    </html>
+</html>
