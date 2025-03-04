@@ -13,8 +13,7 @@
         <h1 class="text-2xl font-bold">Admin Panel - Orders</h1>
         <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
     </div>
-<input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, Status etc.." class="w-full p-2 mb-4 border rounded">
-<audio id="orderAlert" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+<input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, Status, Time etc..." class="w-full p-2 mb-4 border rounded">
     <!-- Orders Container -->
     <div id="ordersContainer" class="grid grid-cols-1 gap-6"></div>
 
@@ -131,7 +130,6 @@ async function fetchOrders() {
     document.getElementById("ordersContainer").innerHTML = ordersHTML;
     hideLoader(); // ✅ Loader hata do jab orders load ho jaye
 }
-
 window.downloadImage = function(imageUrl) {
 if (!imageUrl) {
 alert("Image not found!");
@@ -214,7 +212,7 @@ window.generateReceipt = function(orderId, order) {
         <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
         <p style="font-size: 14px; color: #333;"><strong>Product:</strong> ${order.name}</p>
         <p style="font-size: 14px; color: #333;"><strong>Type:</strong> ${order.type}</p>
-        <p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ${order.price}</p>
+        <p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ₹${order.price}</p>
         <p style="font-size: 12px; color: #555;"><strong>Order Date:</strong> ${order.createdAt}</p>
 
         <hr style="border: 1px solid #ddd; margin: 10px 0;">
