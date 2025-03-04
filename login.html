@@ -3,65 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Admin Panel</title>
+    <title>Admin Login | Secure Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex justify-center items-center h-screen bg-gray-100">
+<body class="flex justify-center items-center h-screen bg-red-100">
 
-    <div class="bg-white p-6 rounded shadow-lg w-96">
-        <h2 class="text-xl font-semibold text-center mb-4">Admin Login</h2>
+    <!-- ✅ Login Card -->
+    <div class="bg-white p-8 rounded-xl shadow-lg w-96 relative border-t-4 border-red-500">
+        <h2 class="text-2xl font-bold text-center text-red-600">Admin Login</h2>
 
-        <input type="email" id="email" placeholder="Enter Email" class="w-full px-3 py-2 border rounded mb-2">
-        <input type="password" id="password" placeholder="Enter Password" class="w-full px-3 py-2 border rounded mb-2">
+        <!-- Input Fields -->
+        <div class="mt-6">
+            <input type="email" id="email" placeholder="Enter Email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div class="mt-3">
+            <input type="password" id="password" placeholder="Enter Password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
 
-        <button id="loginBtn" class="w-full bg-blue-500 text-white py-2 rounded">Login</button>
+        <!-- ✅ Error Message -->
+        <p id="errorMessage" class="text-red-500 text-sm mt-3 hidden transition-opacity duration-500 opacity-0">Invalid Credentials!</p>
 
-        <p id="errorMessage" class="text-red-500 text-sm mt-2 hidden"></p>
+        <!-- ✅ Login Button with Loader -->
+        <button id="loginBtn" class="w-full bg-red-500 text-white py-2 rounded-lg mt-4 flex justify-center items-center">
+            <span id="loginText">Login</span>
+            <div id="loader" class="hidden ml-2 border-2 border-t-2 border-white rounded-full w-5 h-5 animate-spin"></div>
+        </button>
     </div>
 
-    <script type="module">// ✅ Firebase SDK Import
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    <!-- ✅ Firebase SDK Import -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-// ✅ Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBaDy2PoG_-KZVYoraD3tpU_C8CUvKQYQk",
-  authDomain: "print420-bbf5b.firebaseapp.com",
-  projectId: "print420-bbf5b",
-  storageBucket: "print420-bbf5b.firebasestorage.app",
-  messagingSenderId: "240976479161",
-  appId: "1:240976479161:web:930be6bdf355e041df2c68",
-  measurementId: "G-M0LMNP8EYK"
-};
+        // ✅ Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBaDy2PoG_-KZVYoraD3tpU_C8CUvKQYQk",
+            authDomain: "print420-bbf5b.firebaseapp.com",
+            projectId: "print420-bbf5b",
+            storageBucket: "print420-bbf5b.firebasestorage.app",
+            messagingSenderId: "240976479161",
+            appId: "1:240976479161:web:930be6bdf355e041df2c68",
+            measurementId: "G-M0LMNP8EYK"
+        };
 
-// ✅ Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+        // ✅ Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
 
-// ✅ Static Admin UIDs
-const adminUIDs = ["FOfcAgT7VBgMr3Zf785LSpwKWAz2", "UID_2"];
+        // ✅ Static Admin UIDs
+        const adminUIDs = ["FOfcAgT7VBgMr3Zf785LSpwKWAz2", "UID_2"];
 
-// ✅ Login Function
-document.getElementById("loginBtn").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const errorMessage = document.getElementById("errorMessage");
+        // ✅ Login Function with Loader
+        document.getElementById("loginBtn").addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const errorMessage = document.getElementById("errorMessage");
+            const loginText = document.getElementById("loginText");
+            const loader = document.getElementById("loader");
 
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+            try {
+                // ✅ Show Loader
+                loginText.textContent = "Logging in...";
+                loader.classList.remove("hidden");
 
-        // ✅ Check if User is Admin
-        if (!adminUIDs.includes(user.uid)) {
-            throw new Error("Access Denied! You are not an Admin.");
-        }
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-        // ✅ Redirect to Admin Dashboard
-        window.location.href = "index.html";
-    } catch (error) {
-        errorMessage.textContent = error.message;
-        errorMessage.classList.remove("hidden");
-    }
-});</script>
+                // ✅ Check if User is Admin
+                if (!adminUIDs.includes(user.uid)) {
+                    throw new Error("Access Denied! You are not an Admin.");
+                }
+
+                // ✅ Redirect to Admin Dashboard
+                window.location.href = "index.html";
+            } catch (error) {
+                // ✅ Show Error Message
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove("hidden");
+                errorMessage.classList.add("opacity-100");
+
+                // ✅ Hide Loader
+                loginText.textContent = "Login";
+                loader.classList.add("hidden");
+            }
+        });
+    </script>
+
 </body>
 </html>
