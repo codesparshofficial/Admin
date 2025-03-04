@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-100">
+
+    <div class="bg-white p-6 rounded shadow-lg w-96">
+        <h2 class="text-xl font-semibold text-center mb-4">Admin Login</h2>
+
+        <input type="email" id="email" placeholder="Enter Email" class="w-full px-3 py-2 border rounded mb-2">
+        <input type="password" id="password" placeholder="Enter Password" class="w-full px-3 py-2 border rounded mb-2">
+
+        <button id="loginBtn" class="w-full bg-blue-500 text-white py-2 rounded">Login</button>
+
+        <p id="errorMessage" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <script type="module">// ✅ Firebase SDK Import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+// ✅ Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBaDy2PoG_-KZVYoraD3tpU_C8CUvKQYQk",
+  authDomain: "print420-bbf5b.firebaseapp.com",
+  projectId: "print420-bbf5b",
+  storageBucket: "print420-bbf5b.firebasestorage.app",
+  messagingSenderId: "240976479161",
+  appId: "1:240976479161:web:930be6bdf355e041df2c68",
+  measurementId: "G-M0LMNP8EYK"
+};
+
+// ✅ Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+
+// ✅ Static Admin UIDs
+const adminUIDs = ["FOfcAgT7VBgMr3Zf785LSpwKWAz2", "UID_2"];
+
+// ✅ Login Function
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const errorMessage = document.getElementById("errorMessage");
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // ✅ Check if User is Admin
+        if (!adminUIDs.includes(user.uid)) {
+            throw new Error("Access Denied! You are not an Admin.");
+        }
+
+        // ✅ Redirect to Admin Dashboard
+        window.location.href = "index.html";
+    } catch (error) {
+        errorMessage.textContent = error.message;
+        errorMessage.classList.remove("hidden");
+    }
+});</script>
+</body>
+</html>
