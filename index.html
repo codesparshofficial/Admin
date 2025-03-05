@@ -48,7 +48,7 @@ const firebaseConfig = {
         const auth = getAuth();
 
         // ✅ Admin UIDs
-        window.ADMIN_UIDS = ["FOfcAgT7VBgMr3Zf785LSpwKWAz2"];
+        window.ADMIN_UIDS = ["3Tusq6hUNEOoi90mMCQo6U0ipjh2"];
 
         onAuthStateChanged(auth, (user) => {
             if (user && window.ADMIN_UIDS.includes(user.uid)) {
