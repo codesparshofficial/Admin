@@ -304,7 +304,7 @@ order.style.display = found || searchTerm === "" ? "block" : "none";
     // 🔥 Serial Number Add Karna
     orders.forEach((order, index) => {
         let title = order.querySelector("h2");
-        if (title) title.innerHTML = `#${index + 1} ` + title.innerHTML.replace(/#\d+\s*/, "");
+        if (title) title.innerHTML = `#${index + 1}. ` + title.innerHTML.replace(/#\d+\s*/, "");
     });
 
     // ✅ Sorted orders ko container me wapas add karna
