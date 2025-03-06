@@ -284,6 +284,35 @@ field.innerHTML = text.replace(regex, `<span class="bg-yellow-300 px-1">$1</span
 order.style.display = found || searchTerm === "" ? "block" : "none";
 });
 };
+
+    function sortOrders() {
+    let ordersContainer = document.getElementById("ordersContainer");
+    let orders = Array.from(ordersContainer.children);
+
+    // 🔥 Latest orders ko top pe aur processed ko last mein bhejne ka logic
+    orders.sort((a, b) => {
+        let timeA = new Date(a.querySelector("p:nth-child(8)").textContent.split(": ")[1]);
+        let timeB = new Date(b.querySelector("p:nth-child(8)").textContent.split(": ")[1]);
+        let statusA = a.querySelector("p:nth-child(10)").textContent.split(": ")[1];
+        let statusB = b.querySelector("p:nth-child(10)").textContent.split(": ")[1];
+
+        if (statusA === "Processed" && statusB !== "Processed") return 1;
+        if (statusB === "Processed" && statusA !== "Processed") return -1;
+        return timeB - timeA;
+    });
+
+    // 🔥 Serial Number Add Karna
+    orders.forEach((order, index) => {
+        let title = order.querySelector("h2");
+        if (title) title.innerHTML = `#${index + 1} ` + title.innerHTML.replace(/#\d+\s*/, "");
+    });
+
+    // ✅ Sorted orders ko container me wapas add karna
+    orders.forEach(order => ordersContainer.appendChild(order));
+}
+
+// ✅ Fetch orders hone ke baad ye function call karna
+setTimeout(sortOrders, 2000); // 2 sec delay taaki orders load ho jaye
     </script>
 </body>
 </html>
