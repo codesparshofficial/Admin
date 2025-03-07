@@ -218,7 +218,12 @@ window.generateReceipt = function(orderId, order) {
             </div>
         </div>
     `;
-    
+        // ✅ Loader hatao aur receipt dikhayo
+    setTimeout(() => {
+        document.body.removeChild(loader);
+        document.body.appendChild(element);
+    }, 1000);
+};
     document.body.appendChild(element);
 
     // ✅ PDF Generate + Loader Hide
