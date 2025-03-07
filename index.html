@@ -189,36 +189,35 @@ window.generateReceipt = function(orderId, order) {
         <!-- ✅ Sender Details (Company) -->
         <div style="width: 48%; padding: 10px; border-right: 2px dashed #ddd;">
             <div style="text-align:center; margin-bottom: 10px;">
-                <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
+                <img src="https://www.print420.in/img/logo.png" alt="Company Logo" style="max-width: 50px;">
                 <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
                 <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
             </div>
             
             <hr style="border: 1px solid #ddd; margin: 10px 0;">
 
-            <h3 style="color: #333; margin-bottom: 5px;">Sender Details</h3>
-            <p style="font-size: 14px; color: #333;"><strong>Founder:</strong> John Doe</p>
-            <p style="font-size: 14px; color: #333;"><strong>Company Address:</strong> 123 Business Park, Delhi, India</p>
-            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> +91 98765 43210</p>
+            <h3 style="color: #333; margin-bottom: 5px;">From - </h3>
+            <p style="font-size: 14px; color: #333;"><strong>Name:</strong>Ravi Kumar Singh</p>
+            <p style="font-size: 14px; color: #333;"><strong>Address:</strong> Akhauripur gola, Chausa, Buxar, Bihar - 802114</p>
+            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> +91 7061171033</p>
 
             <hr style="border: 1px solid #ddd; margin: 10px 0;">
-            <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
+            
         </div>
 
         <!-- ✅ Receiver Details (Customer) -->
         <div style="width: 48%; padding: 10px;">
-            <h3 style="color: #333; margin-bottom: 5px;">Receiver Details</h3>
+            <h3 style="color: #333; margin-bottom: 5px;">To -</h3>
             <p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
             <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
             <p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-
+  <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
             <hr style="border: 1px solid #ddd; margin: 10px 0;">
             <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
                 <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
             </div>
         </div>
     `;
-
     
     document.body.appendChild(element);
 
