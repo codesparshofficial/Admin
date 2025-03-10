@@ -103,7 +103,7 @@
     });
     
     let ordersHTML = "";
-    
+    let isSpam = order.status === "Spam"; // ✅ Ye line add karna zaroori hai
     ordersArray.forEach((order) => {
       const orderId = order.id;
       ordersHTML += `
