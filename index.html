@@ -158,7 +158,7 @@
       : ''
     }
     <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-  </div>
+  
   ${order.status !== 'Spam' ? 
     `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>` 
     : ''
