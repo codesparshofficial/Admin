@@ -157,8 +157,8 @@
       `<button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>` 
       : ''
     }
-    <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-  
+     <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/"/g, '&quot;')})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+     </div>
   ${order.status !== 'Spam' ? 
     `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>` 
     : ''
