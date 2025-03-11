@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Orders</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="flex justify-between mb-4">
+    <h1 class="text-2xl font-bold">Admin Panel - Orders</h1>
+    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+  </div>
+  
+  <input type="text" id="searchInput" oninput="filterOrders()" placeholder="Search by Order ID, Payment ID, Status, Time etc..." class="w-full p-2 mb-4 border rounded">
+  
+  <!-- Orders Container -->
+  <div id="ordersContainer" class="grid grid-cols-1 gap-6"></div>
+  
+  <!-- Image Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center">
+    <div class="relative">
+      <img id="modalImg" class="max-w-full max-h-screen rounded-lg">
+      <button onclick="closeModal()" class="absolute top-2 right-2 bg-white px-3 py-1 rounded-full">✖</button>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBaDy2PoG_-KZVYoraD3tpU_C8CUvKQYQk",
+      authDomain: "print420-bbf5b.firebaseapp.com",
+      projectId: "print420-bbf5b",
+      storageBucket: "print420-bbf5b.firebasestorage.app",
+      messagingSenderId: "240976479161",
+      appId: "1:240976479161:web:930be6bdf355e041df2c68",
+      measurementId: "G-M0LMNP8EYK"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+    
+    // Admin UIDs
+    window.ADMIN_UIDS = ["3Tusq6hUNEOoi90mMCQo6U0ipjh2"];
+    
+    onAuthStateChanged(auth, (user) => {
+      if (user && window.ADMIN_UIDS.includes(user.uid)) {
+        fetchOrders();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+    
+    // Loader Functions
+    function showLoader() {
+      const loader = document.createElement("div");
+      loader.id = "dataLoader";
+      loader.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+          <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+            <div class="loader" style="border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: auto;"></div>
+            <p style="margin-top: 10px; font-size: 16px; color: #333;">Loading Orders...</p>
+          </div>
+        </div>
+        <style>
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        </style>
+      `;
+      document.body.appendChild(loader);
+    }
+    
+    function hideLoader() {
+      const loader = document.getElementById("dataLoader");
+      if (loader) {
+        document.body.removeChild(loader);
+      }
+    }
+    
+    // Declare ordersArray once globally
+    let ordersArray = [];
+    
+    // Fetch Orders Function
+    async function fetchOrders() {
+      showLoader();
+      ordersArray = []; // Reset the array
+      
+      const querySnapshot = await getDocs(collection(db, "orders"));
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        ordersArray.push({ id: doc.id, ...order });
+      });
+      
+      // Sort Orders: Latest first, Processed & Spam last
+      ordersArray.sort((a, b) => {
+        const inactiveStatuses = ["Processed", "Spam"];
+        const aInactive = inactiveStatuses.includes(a.status);
+        const bInactive = inactiveStatuses.includes(b.status);
+      
+        if (aInactive && !bInactive) return 1;
+        if (!aInactive && bInactive) return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      
+      // Build HTML for each order
+      let ordersHTML = "";
+      ordersArray.forEach((order) => {
+        const orderId = order.id;
+        ordersHTML += `
+          <div class="border p-6 rounded-lg shadow-md bg-white">
+            <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
+            <p><strong>Customer:</strong> ${order.fullName}</p>
+            <p><strong>Mobile:</strong> ${order.mobile}</p>
+            <p><strong>Email:</strong> ${order.email}</p>
+            <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+            <p><strong>Order Id:</strong> ${orderId}</p>
+            <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+            <p><strong>Payment ID:</strong> ${order.paymentId}</p>
+            <p><strong>Time:</strong> ${order.createdAt}</p>
+            <p><strong>Order Type:</strong> ${order.type}</p>
+            <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
+            
+            <div class="flex gap-4 mt-3">
+              <img src="${order.image1}" onclick="openModal('${order.image1}')" class="w-40 h-40 object-cover border cursor-pointer">
+              <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
+            </div>
+            
+            ${order.status === 'Spam' ?
+              '<div class="bg-red-100 text-red-700 p-2 mt-2 rounded">⚠️ DANGEROUS ZONE - POTENTIAL FRAUDULENT ORDER</div>'
+              : ''
+            }
+            
+            <div class="mt-3">
+              <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
+              <button onclick='generateReceipt("${orderId}", ${JSON.stringify(order).replace(/" /g, '&quot;')})' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+              <button onclick="markAsSpam('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>
+            </div>
+          </div>
+        `;
+      });
+      
+      document.getElementById("ordersContainer").innerHTML = ordersHTML;
+      hideLoader();
+    }
+    
+    // Update Order Status Function
+    window.updateStatus = async function(orderId, currentStatus) {
+      const statusList = ["Processed"];
+      let newIndex = (statusList.indexOf(currentStatus) + 1) % statusList.length;
+      let newStatus = statusList[newIndex];
+      
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, { status: newStatus });
+      
+      document.getElementById(`status-${orderId}`).textContent = newStatus;
+      alert("Order status updated to " + newStatus);
+      
+      fetchOrders(); // Refresh orders to apply sorting changes
+    };
+    
+    // Generate Receipt Function
+    window.generateReceipt = function(orderId, order) {
+      const loader = document.createElement("div");
+      loader.id = "receiptLoader";
+      loader.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+          <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+            <div class="loader" style="border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: auto;"></div>
+            <p style="margin-top: 10px; font-size: 16px; color: #333;">Generating Receipt...</p>
+          </div>
+        </div>
+        <style>
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        </style>
+      `;
+      document.body.appendChild(loader);
+  
+      const element = document.createElement("div");
+      element.style.padding = "20px";
+      element.style.border = "2px solid #333";
+      element.style.borderRadius = "10px";
+      element.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
+      element.style.fontFamily = "Arial, sans-serif";
+      element.style.width = "100%";
+      element.style.maxWidth = "450px";
+      element.style.margin = "20px auto";
+      element.style.backgroundColor = "#fff";
+      element.style.textAlign = "center";
+  
+      element.innerHTML = `
+        <div style="text-align:center; margin-bottom: 10px;">
+          <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
+          <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
+          <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
+        </div>
+  
+        <hr style="border: 1px solid #ddd; margin: 10px 0;">
+  
+        <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
+        <p style="font-size: 14px; color: #333;"><strong>Product:</strong> ${order.name}</p>
+        <p style="font-size: 14px; color: #333;"><strong>Type:</strong> ${order.type}</p>
+        <p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ₹${order.price}</p>
+        <p style="font-size: 12px; color: #555;"><strong>Order Date:</strong> ${order.createdAt}</p>
+  
+        <hr style="border: 1px solid #ddd; margin: 10px 0;">
+  
+        <h3 style="color: #333; margin-bottom: 5px;">Buyer Details</h3>
+        <p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
+        <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
+        <p style="font-size: 14px; color: #333;"><strong>Email:</strong> ${order.email}</p>
+        <p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+  
+        <hr style="border: 1px solid #ddd; margin: 10px 0;">
+  
+        <p style="font-size: 14px; color: ${order.paymentStatus === 'Paid' ? 'green' : 'red'};">
+          <strong>Payment Status:</strong> ${order.paymentStatus}
+        </p>
+        <p style="font-size: 14px; color: #333;"><strong>Payment ID:</strong> ${order.paymentId}</p>
+  
+        <hr style="border: 1px solid #ddd; margin: 10px 0;">
+  
+        <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+          <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
+        </div>
+      `;
+  
+      document.body.appendChild(element);
+  
+      html2pdf().from(element).set({
+        margin: 10,
+        filename: `Order_Receipt_${order.fullName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).save().then(() => {
+        document.body.removeChild(element);
+        document.body.removeChild(loader);
+      });
+    };
+    
+    // Logout Function
+    window.logout = function() {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
+    };
+    
+    // Modal Functions
+    window.openModal = function(imgUrl) {
+      document.getElementById("modalImg").src = imgUrl;
+      document.getElementById("modal").classList.remove("hidden");
+    };
+    
+    window.closeModal = function() {
+      document.getElementById("modal").classList.add("hidden");
+    };
+    
+    // Filter Orders Function
+    window.filterOrders = function () {
+      const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+      const orders = document.querySelectorAll("#ordersContainer > div");
+      
+      orders.forEach(order => {
+        let found = false;
+        const fields = order.querySelectorAll("p");
+        fields.forEach(field => {
+          const text = field.textContent;
+          const lowerText = text.toLowerCase();
+          // Remove previous highlights
+          field.innerHTML = text;
+          if (lowerText.includes(searchTerm) && searchTerm !== "") {
+            found = true;
+            let regex = new RegExp(`(${searchTerm})`, "gi");
+            field.innerHTML = text.replace(regex, `<span class="bg-yellow-300 px-1">$1</span>`);
+          }
+        });
+        order.style.display = found || searchTerm === "" ? "block" : "none";
+      });
+    };
+    
+    // Sort Orders Function (example: adding serial numbers)
+    function sortOrders() {
+      const ordersContainer = document.getElementById("ordersContainer");
+      const orders = Array.from(ordersContainer.children);
+      
+      orders.sort((a, b) => {
+        let timeA = new Date(a.querySelector("p:nth-child(8)").textContent.split(": ")[1]);
+        let timeB = new Date(b.querySelector("p:nth-child(8)").textContent.split(": ")[1]);
+        let statusA = a.querySelector("p:nth-child(10)").textContent.split(": ")[1];
+        let statusB = b.querySelector("p:nth-child(10)").textContent.split(": ")[1];
+    
+        if (statusA === "Processed" && statusB !== "Processed") return 1;
+        if (statusB === "Processed" && statusA !== "Processed") return -1;
+        return timeB - timeA;
+      });
+      
+      orders.forEach((order, index) => {
+        let title = order.querySelector("h2");
+        if (title) {
+          title.innerHTML = `#${index + 1}. ` + title.innerHTML.replace(/#\d+\s*/, "");
+        }
+      });
+      
+      orders.forEach(order => ordersContainer.appendChild(order));
+    }
+    
+    // Call sortOrders after orders are loaded
+    setTimeout(sortOrders, 2000);
+    
+    // Mark as Spam Function
+    window.markAsSpam = async function(orderId) {
+      const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
+      if (!confirmSpam) return;
+      
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: "Spam",
+        isDangerous: true
+      });
+      
+      alert("Order marked as spam!");
+      
+      const statusElement = document.getElementById(`status-${orderId}`);
+      if (statusElement) {
+        statusElement.textContent = "Spam";
+        statusElement.parentElement.parentElement.classList.add('border-red-500', 'border-4');
+      }
+      
+      fetchOrders();
+    };
+  </script>
+</body>
+</html>
