@@ -125,14 +125,20 @@
                         <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
                     </div>
 
-                    <div class="mt-3">
-                        <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
-                        <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/"/g, '&quot;')})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-                    </div>
-                </div>
-            `;
+${order.status === 'Spam' ?
+'<div class="bg-red-100 text-red-700 p-2 mt-2 rounded">⚠️ DANGEROUS ZONE - POTENTIAL FRAUDULENT ORDER</div>'
+: ''}
+
+<div class="mt-3">
+  <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
+  <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/" /g, '&quot;' )})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+  <button onclick="markAsSpam('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>
+</div>
+</div>
+`;
+      
     });
-    
+ 
     document.getElementById("ordersContainer").innerHTML = ordersHTML;
     hideLoader(); // ✅ Hide loader when done
   }
@@ -313,6 +319,45 @@ order.style.display = found || searchTerm === "" ? "block" : "none";
 
 // ✅ Fetch orders hone ke baad ye function call karna
 setTimeout(sortOrders, 2000); // 2 sec delay taaki orders load ho jaye
+
+// ✅ Mark as Spam Function
+window.markAsSpam = async function(orderId) {
+    const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
+    if (!confirmSpam) return;
+
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, { 
+        status: "Spam",
+        isDangerous: true 
+    });
+
+    // Add visual feedback
+    const statusElement = document.getElementById(`status-${orderId}`);
+    if (statusElement) {
+        statusElement.textContent = "Spam";
+        statusElement.parentElement.parentElement.classList.add('border-red-500', 'border-4');
+    }
+    
+    fetchOrders(); // Refresh the list
+    alert("Order marked as spam!");
+};
+
+// Update the sorting logic to handle Spam status
+ordersArray.sort((a, b) => {
+    const inactiveStatuses = ["Processed", "Spam"];
+    const aInactive = inactiveStatuses.includes(a.status);
+    const bInactive = inactiveStatuses.includes(b.status);
+
+    if (aInactive && !bInactive) return 1;
+    if (!aInactive && bInactive) return -1;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+});
+
+// Add danger message in the order template (after status)
+${order.status === 'Spam' ? 
+    '<div class="bg-red-100 text-red-700 p-2 mt-2 rounded">⚠️ DANGEROUS ZONE - POTENTIAL FRAUDULENT ORDER</div>' 
+    : ''}
     </script>
 </body>
-</html>
+    </html>
+    
