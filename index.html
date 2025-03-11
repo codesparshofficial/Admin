@@ -83,65 +83,67 @@
     }
   }
   
-  // ✅ Fetch Orders from Firestore with Sorting
-  async function fetchOrders() {
-    showLoader(); // ✅ Show loader while fetching
-    
-    const querySnapshot = await getDocs(collection(db, "orders"));
-    let ordersArray = [];
-    
-    querySnapshot.forEach((doc) => {
-      const order = doc.data();
-      ordersArray.push({ id: doc.id, ...order });
-    });
-    
-    // ✅ Sort: Latest orders first, Processed orders at the bottom
-    ordersArray.sort((a, b) => {
-      if (a.status === "Processed" && b.status !== "Processed") return 1;
-      if (a.status !== "Processed" && b.status === "Processed") return -1;
-      return new Date(b.createdAt) - new Date(a.createdAt); // Newest orders first
-    });
-    
-    let ordersHTML = "";
-    
-    ordersArray.forEach((order) => {
-      const orderId = order.id;
-      ordersHTML += `
-                <div class="border p-6 rounded-lg shadow-md bg-white">
-                    <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
-                    <p><strong>Customer:</strong> ${order.fullName}</p>
-                    <p><strong>Mobile:</strong> ${order.mobile}</p>
-                    <p><strong>Email:</strong> ${order.email}</p>
-                    <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-                    <p><strong>Order Id:</strong> ${orderId}</p>
-                    <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
-                    <p><strong>Payment ID:</strong> ${order.paymentId}</p>
-                    <p><strong>Time:</strong> ${order.createdAt}</p>
-                    <p><strong>Order Type:</strong> ${order.type}</p>
-                    <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
+async function fetchOrders() {
+showLoader();
 
-                    <div class="flex gap-4 mt-3">
-                        <img src="${order.image1}" onclick="openModal('${order.image1}')" class="w-40 h-40 object-cover border cursor-pointer">
-                        <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
-                    </div>
+const querySnapshot = await getDocs(collection(db, "orders"));
+let ordersArray = [];
 
-${order.status === 'Spam' ?
-'<div class="bg-red-100 text-red-700 p-2 mt-2 rounded">⚠️ DANGEROUS ZONE - POTENTIAL FRAUDULENT ORDER</div>'
-: ''}
+querySnapshot.forEach((doc) => {
+const order = doc.data();
+ordersArray.push({ id: doc.id, ...order });
+});
 
-<div class="mt-3">
-  <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
-  <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/" /g, '&quot;' )})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-  <button onclick="markAsSpam('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>
-</div>
+// ✅ Sort Orders: Latest first, Processed & Spam last
+ordersArray.sort((a, b) => {
+const inactiveStatuses = ["Processed", "Spam"];
+const aInactive = inactiveStatuses.includes(a.status);
+const bInactive = inactiveStatuses.includes(b.status);
+
+if (aInactive && !bInactive) return 1;
+if (!aInactive && bInactive) return -1;
+return new Date(b.createdAt) - new Date(a.createdAt);
+});
+
+let ordersHTML = "";
+
+ordersArray.forEach((order) => {
+const orderId = order.id;
+ordersHTML += `
+<div class="border p-6 rounded-lg shadow-md bg-white">
+  <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
+  <p><strong>Customer:</strong> ${order.fullName}</p>
+  <p><strong>Mobile:</strong> ${order.mobile}</p>
+  <p><strong>Email:</strong> ${order.email}</p>
+  <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+  <p><strong>Order Id:</strong> ${orderId}</p>
+  <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+  <p><strong>Payment ID:</strong> ${order.paymentId}</p>
+  <p><strong>Time:</strong> ${order.createdAt}</p>
+  <p><strong>Order Type:</strong> ${order.type}</p>
+  <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
+  
+  <div class="flex gap-4 mt-3">
+    <img src="${order.image1}" onclick="openModal('${order.image1}')" class="w-40 h-40 object-cover border cursor-pointer">
+    <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
+  </div>
+  
+  ${order.status === 'Spam' ?
+  '<div class="bg-red-100 text-red-700 p-2 mt-2 rounded">⚠️ DANGEROUS ZONE - POTENTIAL FRAUDULENT ORDER</div>'
+  : ''}
+  
+  <div class="mt-3">
+    <button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>
+    <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/" /g, '&quot;' )})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+    <button onclick="markAsSpam('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>
+  </div>
 </div>
 `;
-      
-    });
- 
-    document.getElementById("ordersContainer").innerHTML = ordersHTML;
-    hideLoader(); // ✅ Hide loader when done
-  }
+});
+
+document.getElementById("ordersContainer").innerHTML = ordersHTML;
+hideLoader();
+}
   
   // ✅ Update Order Status
   window.updateStatus = async function(orderId, currentStatus) {
@@ -325,11 +327,13 @@ window.markAsSpam = async function(orderId) {
     const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
     if (!confirmSpam) return;
 
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { 
-        status: "Spam",
-        isDangerous: true 
-    });
+    await updateDoc(orderRef, {
+status: "Spam",
+isDangerous: true
+});
+
+await fetchOrders(); // ✅ Ensure updated data loads
+alert("Order marked as spam!");
 
     // Add visual feedback
     const statusElement = document.getElementById(`status-${orderId}`);
