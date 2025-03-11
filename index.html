@@ -144,9 +144,9 @@
     </div>
     
     ${order.status === 'Spam' ? 
-  `<div class="bg-gradient-to-r from-red-500 to-red-700 text-white p-3 mt-3 rounded-lg border-2 border-red-900 shadow-lg animate-pulse">
-      <strong class="text-xl">⚠️ DANGEROUS ZONE</strong> 
-      <p class="mt-1">This order is marked as <span class="font-bold">potentially fraudulent</span>. Proceed with caution!</p>
+  `<div class="bg-red-600 text-white p-4 mt-4 rounded-lg border-l-4 border-red-900 shadow-md">
+      <strong class="text-lg">⚠️ Caution: Potentially Fraudulent Order</strong>
+      <p class="mt-2 text-sm">This order has been flagged as <span class="font-semibold">potentially fraudulent</span>. Please review carefully before proceeding.</p>
   </div>` 
   : ''
 }
@@ -173,23 +173,47 @@
     }
 
 
-    let spamOrderId = null;
+// ✅ Ensure spamOrderId is globally declared
+// ✅ Ensure spamOrderId is globally declared
+let spamOrderId = null; // Store order ID for spam action
 
-function openSpamModal(orderId) {
-    spamOrderId = orderId; // Store order ID for action
-    document.getElementById('spamModal').classList.remove('hidden');
-}
+// Open Spam Confirmation Modal (attached to window)
+window.openSpamModal = function(orderId) {
+  spamOrderId = orderId; // Store order ID for spam action
+  document.getElementById('spamModal').classList.remove('hidden');
+};
 
-function closeSpamModal() {
-    document.getElementById('spamModal').classList.add('hidden');
-}
+// Close Spam Modal (attached to window)
+window.closeSpamModal = function() {
+  document.getElementById('spamModal').classList.add('hidden');
+};
 
-function confirmSpamAction() {
-    if (spamOrderId) {
-        markAsSpam(spamOrderId); // Call the actual function to mark as spam
-        closeSpamModal(); // Close the modal
+// Confirm & Mark Order as Spam (attached to window)
+window.confirmSpamAction = async function() {
+  if (!spamOrderId) return;
+  
+  try {
+    const orderRef = doc(db, "orders", spamOrderId);
+    await updateDoc(orderRef, { status: "Spam", isDangerous: true });
+    
+    alert("Order marked as spam successfully!");
+    
+    // Update Status in UI
+    const statusElement = document.getElementById(`status-${spamOrderId}`);
+    if (statusElement) {
+      statusElement.textContent = "Spam";
+      statusElement.parentElement.parentElement.classList.add('border-red-500', 'border-4');
     }
-}
+    
+    // Refresh Orders
+    fetchOrders();
+    
+  } catch (error) {
+    alert("Failed to mark order as spam: " + error.message);
+  }
+  
+  window.closeSpamModal(); // Close the modal
+};
     // Update Order Status Function
     window.updateStatus = async function(orderId, currentStatus) {
       const statusList = ["Processed"];
