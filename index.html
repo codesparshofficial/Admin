@@ -183,68 +183,75 @@
       `;
       document.body.appendChild(loader);
   
-      const element = document.createElement("div");
-      element.style.padding = "20px";
-      element.style.border = "2px solid #333";
-      element.style.borderRadius = "10px";
-      element.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-      element.style.fontFamily = "Arial, sans-serif";
-      element.style.width = "100%";
-      element.style.maxWidth = "450px";
-      element.style.margin = "20px auto";
-      element.style.backgroundColor = "#fff";
-      element.style.textAlign = "center";
-  
-      element.innerHTML = `
+          // ✅ Receipt ke liye container
+    const element = document.createElement("div");
+    element.style.padding = "20px";
+    element.style.border = "2px solid #333";
+    element.style.borderRadius = "10px";
+    element.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
+    element.style.fontFamily = "Arial, sans-serif";
+    element.style.width = "100%";
+    element.style.maxWidth = "450px";
+    element.style.margin = "20px auto";
+    element.style.backgroundColor = "#fff";
+    element.style.textAlign = "center";
+
+    element.innerHTML = `
+        <!-- ✅ Company Name & Logo -->
         <div style="text-align:center; margin-bottom: 10px;">
-          <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
-          <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
-          <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
+            <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
+            <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
+            <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
         </div>
-  
+
         <hr style="border: 1px solid #ddd; margin: 10px 0;">
-  
+
+        <!-- ✅ Order Details -->
         <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
         <p style="font-size: 14px; color: #333;"><strong>Product:</strong> ${order.name}</p>
         <p style="font-size: 14px; color: #333;"><strong>Type:</strong> ${order.type}</p>
         <p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ₹${order.price}</p>
         <p style="font-size: 12px; color: #555;"><strong>Order Date:</strong> ${order.createdAt}</p>
-  
+
         <hr style="border: 1px solid #ddd; margin: 10px 0;">
-  
+
+        <!-- ✅ Buyer Details -->
         <h3 style="color: #333; margin-bottom: 5px;">Buyer Details</h3>
         <p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
         <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
         <p style="font-size: 14px; color: #333;"><strong>Email:</strong> ${order.email}</p>
         <p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-  
+
         <hr style="border: 1px solid #ddd; margin: 10px 0;">
-  
+
+        <!-- ✅ Payment Details -->
         <p style="font-size: 14px; color: ${order.paymentStatus === 'Paid' ? 'green' : 'red'};">
-          <strong>Payment Status:</strong> ${order.paymentStatus}
+            <strong>Payment Status:</strong> ${order.paymentStatus}
         </p>
         <p style="font-size: 14px; color: #333;"><strong>Payment ID:</strong> ${order.paymentId}</p>
-  
+
         <hr style="border: 1px solid #ddd; margin: 10px 0;">
-  
+
+        <!-- ✅ Thank You Note -->
         <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-          <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
+            <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
         </div>
-      `;
-  
-      document.body.appendChild(element);
-  
-      html2pdf().from(element).set({
+    `;
+
+    document.body.appendChild(element);
+
+    // ✅ PDF Generate + Loader Hide
+    html2pdf().from(element).set({
         margin: 10,
         filename: `Order_Receipt_${order.fullName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).save().then(() => {
+    }).save().then(() => {
         document.body.removeChild(element);
-        document.body.removeChild(loader);
-      });
-    };
+        document.body.removeChild(loader); // ✅ Loader ko hatao
+    });
+};
     
     // Logout Function
     window.logout = function() {
