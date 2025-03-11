@@ -168,7 +168,7 @@
     
     // Generate Receipt Function
     window.generateReceipt = function(orderId, order) {
-    // ✅ Loader ko show karna
+    // ✅ Loader show karna
     const loader = document.createElement("div");
     loader.id = "receiptLoader";
     loader.innerHTML = `
@@ -184,8 +184,7 @@
     `;
     document.body.appendChild(loader);
 
-  
-          // ✅ Receipt ke liye container
+    // ✅ Receipt ke liye container (Landscape Format)
     const element = document.createElement("div");
     element.style.padding = "20px";
     element.style.border = "2px solid #333";
@@ -193,52 +192,47 @@
     element.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
     element.style.fontFamily = "Arial, sans-serif";
     element.style.width = "100%";
-    element.style.maxWidth = "450px";
+    element.style.maxWidth = "700px"; // 👈 Landscape Format
     element.style.margin = "20px auto";
     element.style.backgroundColor = "#fff";
-    element.style.textAlign = "center";
+    element.style.textAlign = "left";
+    element.style.display = "flex"; // 👈 Landscape layout ke liye flex use kiya
+    element.style.justifyContent = "space-between";
 
     element.innerHTML = `
-        <!-- ✅ Company Name & Logo -->
-        <div style="text-align:center; margin-bottom: 10px;">
-            <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
-            <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
-            <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
+        <!-- ✅ Sender Details (Company) -->
+        <div style="width: 48%; padding: 10px; border-right: 2px dashed #ddd;">
+            <div style="text-align:center; margin-bottom: 10px;">
+                <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 100px;">
+                <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
+                <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
+            </div>
+            
+            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+
+            <h3 style="color: #333; margin-bottom: 5px;">From - </h3>
+            <p style="font-size: 14px; color: #333;"><strong>Name:</strong>Ravi Kumar Singh</p>
+            <p style="font-size: 14px; color: #333;"><strong>Address:</strong> Akhauripur gola, Chausa, Buxar, Bihar, India - 802114</p>
+            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> +91 98765 43210</p>
+
+            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+           
         </div>
 
-        <hr style="border: 1px solid #ddd; margin: 10px 0;">
-
-        <!-- ✅ Order Details -->
-        <p style="font-size: 14px; color: #333;"><strong>Order ID:</strong> ${orderId}</p>
-        <p style="font-size: 14px; color: #333;"><strong>Product:</strong> ${order.name}</p>
-        <p style="font-size: 14px; color: #333;"><strong>Type:</strong> ${order.type}</p>
-        <p style="font-size: 14px; color: #007bff; font-weight: bold;"><strong>Price:</strong> ₹${order.price}</p>
-        <p style="font-size: 12px; color: #555;"><strong>Order Date:</strong> ${order.createdAt}</p>
-
-        <hr style="border: 1px solid #ddd; margin: 10px 0;">
-
-        <!-- ✅ Buyer Details -->
-        <h3 style="color: #333; margin-bottom: 5px;">Buyer Details</h3>
-        <p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
-        <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
-        <p style="font-size: 14px; color: #333;"><strong>Email:</strong> ${order.email}</p>
-        <p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-
-        <hr style="border: 1px solid #ddd; margin: 10px 0;">
-
-        <!-- ✅ Payment Details -->
-        <p style="font-size: 14px; color: ${order.paymentStatus === 'Paid' ? 'green' : 'red'};">
-            <strong>Payment Status:</strong> ${order.paymentStatus}
-        </p>
-        <p style="font-size: 14px; color: #333;"><strong>Payment ID:</strong> ${order.paymentId}</p>
-
-        <hr style="border: 1px solid #ddd; margin: 10px 0;">
-
-        <!-- ✅ Thank You Note -->
-        <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-            <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
+        <!-- ✅ Receiver Details (Customer) -->
+        <div style="width: 48%; padding: 10px;">
+            <h3 style="color: #333; margin-bottom: 5px;">To - </h3>
+            <p style="font-size: 14px; color: #333;"><strong>Name:</strong> ${order.fullName}</p>
+            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> ${order.mobile}</p>
+            <p style="font-size: 14px; color: #333;"><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+ <p style="font-size: 14px; color: #333;"><strong>Order Id:</strong> ${order.orderId}</p>
+            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+            <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                <p style="margin: 0; font-size: 12px; color: #777;">Thank you for your order!</p>
+            </div>
         </div>
     `;
+      
 
     document.body.appendChild(element);
 
