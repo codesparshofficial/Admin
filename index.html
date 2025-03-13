@@ -144,9 +144,9 @@
     </div>
     
     ${order.status === 'Spam' ? 
-  `<div class="bg-red-600 text-white p-4 mt-4 rounded-lg border-l-4 border-red-900 shadow-md">
-      <strong class="text-lg">⚠️ Caution: Potentially Fraudulent Order</strong>
-      <p class="mt-2 text-sm">This order has been flagged as <span class="font-semibold">potentially fraudulent</span>. Please review carefully before proceeding.</p>
+  `<div class="bg-gradient-to-r from-red-500 to-red-700 text-white p-3 mt-3 rounded-lg border-2 border-red-900 shadow-lg animate-pulse">
+      <strong class="text-xl">⚠️ DANGEROUS ZONE</strong> 
+      <p class="mt-1">This order is marked as <span class="font-bold">potentially fraudulent</span>. Proceed with caution!</p>
   </div>` 
   : ''
 }
@@ -157,11 +157,15 @@
       `<button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>` 
       : ''
     }
-     <button onclick="generateReceipt('${orderId}', ${JSON.stringify(order).replace(/"/g, '&quot;')})" class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-     </div>
+    <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
+  </div>
   ${order.status !== 'Spam' ? 
     `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>` 
     : ''
+}
+${order.status !== 'Refunded' ? 
+  `<button onclick="markAsRefunded('${orderId}')" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Mark as Refunded</button>` 
+  : ''
 }
 </div>
   </div>
@@ -381,6 +385,27 @@ window.confirmSpamAction = async function() {
     // Call sortOrders after orders are loaded
     setTimeout(sortOrders, 2000);
     
+    // ✅ Mark Order as Refunded Function
+window.markAsRefunded = async function(orderId) {
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, { status: "Refunded" });
+
+    alert("Order marked as Refunded successfully!");
+    
+    // UI Update (Real-time change)
+    const statusElement = document.getElementById(`status-${orderId}`);
+    if (statusElement) {
+      statusElement.textContent = "Refunded";
+      statusElement.parentElement.parentElement.classList.add('border-yellow-500', 'border-4');
+    }
+
+    // Orders ko refresh karna
+    fetchOrders();
+  } catch (error) {
+    alert("Failed to mark order as Refunded: " + error.message);
+  }
+};
     // Mark as Spam Function
     window.markAsSpam = async function(orderId) {
       const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
@@ -404,4 +429,4 @@ window.confirmSpamAction = async function() {
     };
   </script>
 </body>
-</html>
+  </html>
