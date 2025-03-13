@@ -390,14 +390,14 @@ window.markAsRefunded = async function(orderId) {
 
   try {
     const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status: "refunded" });
+    await updateDoc(orderRef, { status: "Refunded" });
 
     alert("Order marked as Refunded!");
 
     // Update the status badge dynamically
     const statusElement = document.getElementById(`status-${orderId}`);
     if (statusElement) {
-      statusElement.textContent = "refunded";
+      statusElement.textContent = "Refunded";
       statusElement.className = "px-3 py-1 text-white font-semibold rounded-lg bg-blue-500";
     }
 
