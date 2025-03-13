@@ -390,7 +390,7 @@ window.markAsRefunded = async function(orderId) {
 
   try {
     const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status: "Refunded" });
+    await updateDoc(orderRef, { status: "Your order has been refunded due to an issue. Please place a new order to continue." });
 
     alert("Order marked as Refunded!");
 
