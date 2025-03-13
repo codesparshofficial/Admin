@@ -27,16 +27,6 @@
     </div>
   </div>
   
-  <div id="spamModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white p-5 rounded-lg shadow-lg text-center">
-        <h2 class="text-red-600 font-bold text-xl">⚠️ Confirm Spam Action</h2>
-        <p class="mt-2">Are you sure you want to mark this order as spam? You can restore it later if needed.</p>
-        <div class="mt-4 flex justify-center">
-            <button onclick="confirmSpamAction()" class="bg-red-600 text-white px-4 py-2 rounded">Yes, Mark as Spam</button>
-            <button onclick="closeSpamModal()" class="bg-gray-400 text-white px-4 py-2 rounded ml-2">Cancel</button>
-        </div>
-    </div>
-  </div>
   <script type="module">
     // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -98,8 +88,8 @@
     // Declare ordersArray once globally
     let ordersArray = [];
     
-    // Fetch Orders Functi
-        // Fetch Orders Function
+    // Fetch Orders Function
+    // Fetch Orders Function
 async function fetchOrders() {
 showLoader();
 ordersArray = []; // Reset the array
@@ -202,49 +192,7 @@ ${!['Processed', 'Refunded', 'Spam'].includes(order.status) ?
 document.getElementById("ordersContainer").innerHTML = ordersHTML;
 hideLoader();
 }
-
-
-// ✅ Ensure spamOrderId is globally declared
-// ✅ Ensure spamOrderId is globally declared
-let spamOrderId = null; // Store order ID for spam action
-
-// Open Spam Confirmation Modal (attached to window)
-window.openSpamModal = function(orderId) {
-  spamOrderId = orderId; // Store order ID for spam action
-  document.getElementById('spamModal').classList.remove('hidden');
-};
-
-// Close Spam Modal (attached to window)
-window.closeSpamModal = function() {
-  document.getElementById('spamModal').classList.add('hidden');
-};
-
-// Confirm & Mark Order as Spam (attached to window)
-window.confirmSpamAction = async function() {
-  if (!spamOrderId) return;
-  
-  try {
-    const orderRef = doc(db, "orders", spamOrderId);
-    await updateDoc(orderRef, { status: "Spam", isDangerous: true });
     
-    alert("Order marked as spam successfully!");
-    
-    // Update Status in UI
-    const statusElement = document.getElementById(`status-${spamOrderId}`);
-    if (statusElement) {
-      statusElement.textContent = "Spam";
-      statusElement.parentElement.parentElement.classList.add('border-red-500', 'border-4');
-    }
-    
-    // Refresh Orders
-    fetchOrders();
-    
-  } catch (error) {
-    alert("Failed to mark order as spam: " + error.message);
-  }
-  
-  window.closeSpamModal(); // Close the modal
-};
     // Update Order Status Function
     window.updateStatus = async function(orderId, currentStatus) {
       const statusList = ["Processed"];
@@ -297,7 +245,7 @@ window.confirmSpamAction = async function() {
         <!-- ✅ Sender Details (Company) -->
         <div style="width: 48%; padding: 10px; border-right: 2px dashed #ddd;">
             <div style="text-align:center; margin-bottom: 10px;">
-                <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 50px;">
+                <img src="https://codesparshofficial.github.io/Print420/img12.png" alt="Company Logo" style="max-width: 40px;">
                 <h2 style="color: #007bff; margin-top: 5px;">Print 420</h2>
                 <p style="font-size: 12px; color: #555;">www.Print420.in | pvcprint420@gmail.com</p>
             </div>
@@ -305,9 +253,9 @@ window.confirmSpamAction = async function() {
             <hr style="border: 1px solid #ddd; margin: 10px 0;">
 
             <h3 style="color: #333; margin-bottom: 5px;">From - </h3>
-            <p style="font-size: 14px; color: #333;"><strong>Name:</strong> Ravi Kumar Singh</p>
+            <p style="font-size: 14px; color: #333;"><strong>Name:</strong>Ravi Kumar Singh</p>
             <p style="font-size: 14px; color: #333;"><strong>Address:</strong> Akhauripur gola, Chausa, Buxar, Bihar, India - 802114</p>
-            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> +91 70611 71033</p>
+            <p style="font-size: 14px; color: #333;"><strong>Mobile:</strong> +91 98765 43210</p>
 
             <hr style="border: 1px solid #ddd; margin: 10px 0;">
            
@@ -412,27 +360,6 @@ window.confirmSpamAction = async function() {
     // Call sortOrders after orders are loaded
     setTimeout(sortOrders, 2000);
     
-    // ✅ Mark Order as Refunded Function
-window.markAsRefunded = async function(orderId) {
-  try {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status: "Refunded" });
-
-    alert("Order marked as Refunded successfully!");
-    
-    // UI Update (Real-time change)
-    const statusElement = document.getElementById(`status-${orderId}`);
-    if (statusElement) {
-      statusElement.textContent = "Refunded";
-      statusElement.parentElement.parentElement.classList.add('border-yellow-500', 'border-4');
-    }
-
-    // Orders ko refresh karna
-    fetchOrders();
-  } catch (error) {
-    alert("Failed to mark order as Refunded: " + error.message);
-  }
-};
     // Mark as Spam Function
     window.markAsSpam = async function(orderId) {
       const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
@@ -456,4 +383,4 @@ window.markAsRefunded = async function(orderId) {
     };
   </script>
 </body>
-  </html>
+</html>
