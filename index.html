@@ -167,8 +167,8 @@ ${order.status === 'Spam' ?
       : ''
       }
 
-      <!-- GENERATE RECEIPT BUTTON (Always Visible) -->
-      <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Receipt</button>
+            <!-- GENERATE RECEIPT BUTTON (Always Visible) -->
+<button onclick='generateReceipt("${orderId}", ${JSON.stringify(order).replace(/" /g, '&quot;')})' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Receipt</button>
     </div>
     
     <div>
