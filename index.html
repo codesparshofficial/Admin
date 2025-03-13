@@ -98,83 +98,110 @@
     // Declare ordersArray once globally
     let ordersArray = [];
     
-    // Fetch Orders Function
-    async function fetchOrders() {
-      showLoader();
-      ordersArray = []; // Reset the array
-      
-      const querySnapshot = await getDocs(collection(db, "orders"));
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        ordersArray.push({ id: doc.id, ...order });
-      });
-      
-      // Sort Orders: Latest first, Processed & Spam last
-      ordersArray.sort((a, b) => {
-        const inactiveStatuses = ["Processed", "Spam"];
-        const aInactive = inactiveStatuses.includes(a.status);
-        const bInactive = inactiveStatuses.includes(b.status);
-      
-        if (aInactive && !bInactive) return 1;
-        if (!aInactive && bInactive) return -1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
-      
-      // Build HTML for each order
-      let ordersHTML = "";
-      ordersArray.forEach((order) => {
-        const orderId = order.id;
-        ordersHTML += `
-  <div class="border p-6 rounded-lg shadow-md bg-white">
-    <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
-    <p><strong>Customer:</strong> ${order.fullName}</p>
-    <p><strong>Mobile:</strong> ${order.mobile}</p>
-    <p><strong>Email:</strong> ${order.email}</p>
-    <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
-    <p><strong>Order Id:</strong> ${orderId}</p>
-    <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
-    <p><strong>Payment ID:</strong> ${order.paymentId}</p>
-    <p><strong>Time:</strong> ${order.createdAt}</p>
-    <p><strong>Order Type:</strong> ${order.type}</p>
-    <p><strong>Current Status:</strong> <span id="status-${orderId}">${order.status}</span></p>
-    
-    <div class="flex gap-4 mt-3">
-      <img src="${order.image1}" onclick="openModal('${order.image1}')" class="w-40 h-40 object-cover border cursor-pointer">
-      <img src="${order.image2}" onclick="openModal('${order.image2}')" class="w-40 h-40 object-cover border cursor-pointer">
+    // Fetch Orders Functi
+        // Fetch Orders Function
+async function fetchOrders() {
+showLoader();
+ordersArray = []; // Reset the array
+
+const querySnapshot = await getDocs(collection(db, "orders"));
+querySnapshot.forEach((doc) => {
+const order = doc.data();
+ordersArray.push({ id: doc.id, ...order });
+});
+
+// Sort Orders based on priority
+ordersArray.sort((a, b) => {
+const priority = { "Undefined": 1, "Processed": 2, "Spam": 3, "Refunded": 4 };
+const statusA = a.status || "Undefined";
+const statusB = b.status || "Undefined";
+
+// Compare based on priority
+if (priority[statusA] !== priority[statusB]) {
+return priority[statusA] - priority[statusB];
+}
+
+// If same priority, sort by latest createdAt
+return new Date(b.createdAt) - new Date(a.createdAt);
+});
+
+// Build HTML for each order
+let ordersHTML = "";
+ordersArray.forEach((order) => {
+const orderId = order.id;
+ordersHTML += `
+<div class="border p-6 rounded-lg shadow-md bg-white">
+  <h2 class="text-lg font-semibold">${order.name} - ${order.price}</h2>
+  <p><strong>Customer:</strong> ${order.fullName}</p>
+  <p><strong>Mobile:</strong> ${order.mobile}</p>
+  <p><strong>Email:</strong> ${order.email}</p>
+  <p><strong>Address:</strong> ${order.address}, ${order.city}, ${order.state}, ${order.pincode}</p>
+  <p><strong>Order Id:</strong> ${orderId}</p>
+  <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+  <p><strong>Payment ID:</strong> ${order.paymentId}</p>
+  <p><strong>Time:</strong> ${order.createdAt}</p>
+  <p><strong>Order Type:</strong> ${order.type}</p>
+
+  <!-- STATUS BADGE -->
+  <p><strong>Current Status:</strong> 
+    <span id="status-${orderId}" 
+          class="px-3 py-1 text-white font-semibold rounded-lg 
+                 ${order.status === 'Processed' ? 'bg-green-600' : 
+                   order.status === 'Pending' ? 'bg-yellow-500' : 
+                   order.status === 'Spam' ? 'bg-red-500' : 
+                   order.status === 'Refunded' ? 'bg-blue-500' : 
+                   'bg-gray-500'}">
+      ${order.status || "Undefined"}
+    </span>
+  </p>
+
+  <!-- IMAGE PREVIEW -->
+  <div class="flex gap-4 mt-3">
+    <img src="${order.image1 || 'placeholder.jpg'}" onclick="openModal('${order.image1 || 'placeholder.jpg'}')" class="w-40 h-40 object-cover border cursor-pointer">
+    <img src="${order.image2 || 'placeholder.jpg'}" onclick="openModal('${order.image2 || 'placeholder.jpg'}')" class="w-40 h-40 object-cover border cursor-pointer">
+  </div>
+
+<!-- SPAM ALERT (Compact & Professional) -->
+${order.status === 'Spam' ?
+`<div class="bg-red-600 text-white text-sm px-3 py-2 mt-3 rounded-md border-l-4 border-red-800 shadow-sm flex items-center">
+  <strong class="mr-2">⚠️ Warning:</strong> This order is flagged as <span class="font-semibold"> Spam</span>.
+</div>` : ''
+}
+
+  <!-- BUTTONS -->
+  <div class="mt-3 flex justify-between">
+    <div>
+      <!-- UPDATE STATUS BUTTON (Hide if Processed/Spam/Refunded) -->
+      ${!['Processed', 'Spam', 'Refunded'].includes(order.status) ?
+      `<button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Processed</button>`
+      : ''
+      }
+
+      <!-- GENERATE RECEIPT BUTTON (Always Visible) -->
+      <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Receipt</button>
     </div>
     
-    ${order.status === 'Spam' ? 
-  `<div class="bg-gradient-to-r from-red-500 to-red-700 text-white p-3 mt-3 rounded-lg border-2 border-red-900 shadow-lg animate-pulse">
-      <strong class="text-xl">⚠️ DANGEROUS ZONE</strong> 
-      <p class="mt-1">This order is marked as <span class="font-bold">potentially fraudulent</span>. Proceed with caution!</p>
-  </div>` 
-  : ''
-}
-    
-    <div class="mt-3 flex justify-between">
-  <div>
-    ${order.status !== 'Spam' ? 
-      `<button onclick="updateStatus('${orderId}', '${order.status}')" class="bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>` 
+    <div>
+      <!-- MARK AS SPAM BUTTON (Hide if Processed/Spam/Refunded) -->
+      ${!['Processed', 'Spam', 'Refunded'].includes(order.status) ?
+      `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Spam</button>`
       : ''
-    }
-    <button onclick='generateReceipt("${orderId}", "${encodeURIComponent(JSON.stringify(order))}")' class="bg-green-500 text-white px-3 py-1 rounded ml-2">Generate Receipt</button>
-  </div>
-  ${order.status !== 'Spam' ? 
-    `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Mark as Spam</button>` 
-    : ''
-}
-${order.status !== 'Refunded' ? 
-  `<button onclick="markAsRefunded('${orderId}')" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Mark as Refunded</button>` 
-  : ''
-}
-</div>
-  </div>
-`;
-      });
+      }
       
-      document.getElementById("ordersContainer").innerHTML = ordersHTML;
-      hideLoader();
-    }
+<!-- MARK AS REFUNDED BUTTON (Hide if Processed, Refunded, or Spam) -->
+${!['Processed', 'Refunded', 'Spam'].includes(order.status) ?
+`<button onclick="markAsRefunded('${orderId}')" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Refunded</button>`
+: ''
+}
+    </div>
+  </div>
+</div>
+`;
+});
+
+document.getElementById("ordersContainer").innerHTML = ordersHTML;
+hideLoader();
+}
 
 
 // ✅ Ensure spamOrderId is globally declared
