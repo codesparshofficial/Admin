@@ -174,7 +174,7 @@ ${order.status === 'Spam' ?
     <div>
       <!-- MARK AS SPAM BUTTON (Hide if Processed/Spam/Refunded) -->
       ${!['Processed', 'Spam', 'Refunded'].includes(order.status) ?
-      `<button onclick="openSpamModal('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Spam</button>`
+      `<button onclick="markAsSpam('${orderId}')" class="bg-red-700 text-white px-3 py-1 rounded ml-2">Spam</button>`
       : ''
       }
       
@@ -360,27 +360,56 @@ hideLoader();
     // Call sortOrders after orders are loaded
     setTimeout(sortOrders, 2000);
     
-    // Mark as Spam Function
-    window.markAsSpam = async function(orderId) {
-      const confirmSpam = confirm("Are you sure you want to mark this order as spam? This action cannot be undone.");
-      if (!confirmSpam) return;
-      
-      const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, {
-        status: "Spam",
-        isDangerous: true
-      });
-      
-      alert("Order marked as spam!");
-      
-      const statusElement = document.getElementById(`status-${orderId}`);
-      if (statusElement) {
-        statusElement.textContent = "Spam";
-        statusElement.parentElement.parentElement.classList.add('border-red-500', 'border-4');
-      }
-      
-      fetchOrders();
-    };
+// Mark as Spam Function
+window.markAsSpam = async function(orderId) {
+if (!confirm("Are you sure you want to mark this order as spam?")) return;
+
+try {
+const orderRef = doc(db, "orders", orderId);
+await updateDoc(orderRef, { status: "Spam" });
+
+alert("Order marked as Spam!");
+
+// Update the status badge dynamically
+const statusElement = document.getElementById(`status-${orderId}`);
+if (statusElement) {
+statusElement.textContent = "Spam";
+statusElement.className = "px-3 py-1 text-white font-semibold rounded-lg bg-red-500";
+}
+
+fetchOrders(); // Refresh orders
+} catch (error) {
+console.error("Error marking as Spam:", error);
+alert("Failed to update order status.");
+}
+};
+
+// Mark as Refunded Function
+window.markAsRefunded = async function(orderId) {
+  if (!confirm("Are you sure you want to mark this order as Refunded?")) return;
+
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, { status: "Refunded" });
+
+    alert("Order marked as Refunded!");
+
+    // Update the status badge dynamically
+    const statusElement = document.getElementById(`status-${orderId}`);
+    if (statusElement) {
+      statusElement.textContent = "Your order has been refunded due to an issue. Please place a new order to continue.";
+      statusElement.className = "px-3 py-1 text-white font-semibold rounded-lg bg-blue-500";
+    }
+
+    fetchOrders(); // Refresh orders
+  } catch (error) {
+    console.error("Error marking as Refunded:", error);
+    alert("Failed to update order status.");
+  }
+};  // <-- Properly close the function here
+
+// Initial fetch
+fetchOrders();
   </script>
 </body>
-</html>
+  </html>
